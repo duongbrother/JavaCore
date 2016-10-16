@@ -1,3 +1,5 @@
+package completablefuture;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,12 +9,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
 public class ParallelWithCompleteable {
+    private static final Logger logger = Logger.getLogger(ParallelWithCompleteable.class);
     static ExecutorService es = Executors.newFixedThreadPool(20);
 
     public Integer doubleIt(Integer v) {
         try {
-//            Thread.currentThread().sleep(1);
+            // Thread.currentThread().sleep(1);
         } catch (Exception e) {
             // TODO: handle exception
         }
@@ -20,7 +25,7 @@ public class ParallelWithCompleteable {
     }
 
     public List<Integer> process(List<Integer> input) {
-        return input.parallelStream().map(this::doubleIt).collect(Collectors.toList());
+        return input.stream().map(this::doubleIt).collect(Collectors.toList());
     }
 
     public void sequentialProcessing(List<List<Integer>> group) {
@@ -30,7 +35,7 @@ public class ParallelWithCompleteable {
         for (List<Integer> e : collect) {
             finalResult.addAll(e);
         }
-        System.out.println(finalResult + ". Size=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
+        logger.info(finalResult + ". Size=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
     }
 
     public void parallelProcess(List<List<Integer>> group) {
@@ -40,7 +45,7 @@ public class ParallelWithCompleteable {
             CompletableFuture<List<Integer>> cf = CompletableFuture.supplyAsync(() -> process(list), es);
             finalResult.addAll(cf.join());
         });
-        System.out.println(finalResult + ". Size=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
+        logger.info(finalResult + ". Size=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
     }
 
     public void parallelProcess2(List<List<Integer>> group) {
@@ -55,10 +60,9 @@ public class ParallelWithCompleteable {
                 finalResult.addAll(e);
             }
         } catch (InterruptedException | ExecutionException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        System.out.println(finalResult + "\nSize=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
+        logger.info("Size=" + finalResult.size() + ". It took: " + (System.currentTimeMillis() - start));
     }
 
     private static <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
@@ -69,19 +73,19 @@ public class ParallelWithCompleteable {
     public static void main(String[] args) {
         long startInit = System.currentTimeMillis();
         List<Integer> orginal = new LinkedList<>();
-        for (int k = 1; k <= 1000000; k++) {
+        for (int k = 1; k <= 10000000; k++) {
             orginal.add(k);
         }
-        System.out.println("Init took: " +(System.currentTimeMillis() - startInit));
+        logger.info("Init took: " + (System.currentTimeMillis() - startInit));
         long startGroup = System.currentTimeMillis();
         List<List<Integer>> group = CommonUtil.group(orginal, 500);
-        System.out.println("Group took: " +(System.currentTimeMillis() - startGroup));
+        logger.info("Group took: " + (System.currentTimeMillis() - startGroup));
         ParallelWithCompleteable pwc = new ParallelWithCompleteable();
-//        for (int i = 0; i < 1; i++) {
-//            pwc.sequentialProcessing(group);
-//        }
+        // for (int i = 0; i < 1; i++) {
+        // pwc.sequentialProcessing(group);
+        // }
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
             pwc.parallelProcess2(group);
         }
         es.shutdown();

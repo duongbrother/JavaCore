@@ -2,3 +2,6 @@
 /Parallel/*.classpath
 /Parallel/*.project
 /Parallel/.settings
+/Parallel/*.log.*
+/Parallel/target
+/Parallel/*.log
